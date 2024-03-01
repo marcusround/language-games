@@ -4,15 +4,14 @@ import { Sentence } from './src/sentence'
 import { Word } from './src/word'
 import { Mouth } from './src/mouth'
 import { FaceLandmarker, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
+import OpenAI from "openai"
 
 let faceLandmarker;
 
 async function createFaceLandmarker() {
-  console.log("Creating FaceLandmarker")
   const filesetResolver = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
   );
-  console.log("FilesetResolver created")
   const faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
     baseOptions: {
       modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
@@ -22,50 +21,112 @@ async function createFaceLandmarker() {
     runningMode: "VIDEO",
     numFaces: 1
   })
-  console.log("FaceLandmarker created")
   return faceLandmarker;
 }
 
+// I had to manually check these T_T
+const innerMouthIndices = [13, 82, 81, 80, 191, 78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308, 415, 310, 311, 312]
+const outerMouthIndices = [0, 37, 39, 40, 185, 62, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 409, 270, 269, 267]
+
 createFaceLandmarker().then((fl) => {
-  console.log("FaceLandmarker created_after")
   console.log(fl)
   faceLandmarker = fl;
 })
 
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true,
+})
 
 new p5(p => {
 
   // Globals
   const g = {}
 
-
-  let hasWaited = true;
-  // setTimeout(() => {
-  //   hasWaited = true;
-  // }, 10000)
-
   let lastVideoTime = 0;
 
-  function doDrawFace() {
-
-    console.log("doDrawFace")
-
-    if (faceLandmarker) {
-      console.log("faceLandmarker exists")
-    }
+  function updateResults() {
 
     if (faceLandmarker && g.video && g.video.elt && g.video.elt.currentTime !== lastVideoTime) {
 
       const videoElement = g.video.elt;
 
-      console.log(videoElement.currentTime)
-      console.log(g.video)
-      const results = faceLandmarker.detectForVideo(videoElement, videoElement.currentTime);
-      console.log("Got here")
-      lastVideoTime = videoElement.currentTime;
-      if (results.faceLandmarks) {
-        console.log("Found landmarks")
+      const results = faceLandmarker.detectForVideo(videoElement, videoElement.currentTime * 1000);
+      lastVideoTime = videoElement.currentTime
+
+      g.results = results;
+
+      if (results && results.faceLandmarks.length !== 0) {
+
+        const mouthPointsInner = innerMouthIndices.map(i => results.faceLandmarks[0][i])
+        mouth.setPoints(mouthPointsInner)
+
+        return
+
+      } else {
+        mouth.setPoints([])
       }
+
+    }
+
+  }
+
+  function doDrawFace() {
+
+    if (g.results) {
+
+      if (g.results.faceLandmarks.length === 0) {
+        return
+      }
+
+      p.push()
+      p.noStroke()
+      p.fill('red')
+      for (let i = 0; i < g.results.faceLandmarks[0].length; i++) {
+
+        let { x, y } = g.results.faceLandmarks[0][i]
+
+        // I don't know why this be like it is but it do
+        y -= 0.11
+
+        x *= g.video.width * g.videoScale
+        y *= g.video.height * g.videoScale
+
+        // p.text(i, x, y)
+
+      }
+      p.pop()
+
+      p.push()
+      p.noFill()
+      p.stroke('white')
+      p.beginShape()
+
+      for (const i of innerMouthIndices) {
+        p.vertex(
+          g.results.faceLandmarks[0][i].x * g.video.width * g.videoScale,
+          (g.results.faceLandmarks[0][i].y - 0.11) * g.video.height * g.videoScale
+        )
+
+      }
+
+      p.endShape(p.CLOSE)
+
+      p.push()
+      p.noFill()
+      p.stroke('white')
+      p.beginShape()
+
+      for (const i of outerMouthIndices) {
+        p.vertex(
+          g.results.faceLandmarks[0][i].x * g.video.width * g.videoScale,
+          (g.results.faceLandmarks[0][i].y - 0.11) * g.video.height * g.videoScale
+        )
+
+      }
+
+      p.endShape(p.CLOSE)
+
     }
 
   }
@@ -96,7 +157,8 @@ new p5(p => {
 
     g.faces = []
 
-    g.sentence = new Sentence()
+    g.sentence = new Sentence(openai)
+    g.sentence.updateOptions()
     g.words = []
 
     g.video = p.createCapture(p.VIDEO, () => {
@@ -106,31 +168,8 @@ new p5(p => {
 
     });
 
-    // video.size(p.width, p.height);
-
-    // ml5
-    //   .facemesh(g.video, () => { console.log('Model is ready!!!') })
-    //   .on("face", results => {
-
-    //     g.faces = results
-
-    //     const mouthPoints = results.map(({ annotations }) => {
-    //       // Get all mouth points
-    //       return [
-    //         ...annotations.lipsLowerInner,
-    //         ...annotations.lipsUpperInner.reverse()
-    //       ]
-    //     })
-    //     [0] ?? []
-
-    //     mouth.setPoints(mouthPoints)
-
-    //   })
-
-
     p.imageMode(p.CENTER)
     p.noFill()
-    // p.noStroke()
 
   }
 
@@ -147,10 +186,8 @@ new p5(p => {
     drawWebcam(p, g)
     mouth.draw(p, g)
 
-    if (hasWaited) {
-      doDrawFace()
-
-    }
+    updateResults()
+    doDrawFace()
 
     for (let i = g.words.length - 1; i >= 0; i--) {
 
@@ -169,15 +206,22 @@ new p5(p => {
         g.words.splice(i, 1)
       }
 
-      g.words.splice(i, 1)
       if (mouth.canEatWord(word)) {
         g.words.splice(i, 1)
+        g.sentence.addWord(word.word)
       }
 
       p.pop();
 
     }
 
+    p.push()
+    p.fill('red')
+    p.textSize(24)
+    p.text(g.sentence.toString(), 25, 25)
+    p.pop()
+
   }
+
 
 })

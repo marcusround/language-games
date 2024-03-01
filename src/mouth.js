@@ -18,8 +18,13 @@ export class Mouth {
 
   mapWebcamPointToCanvasPoint([_x, _y]) {
 
-    const x = (_x / this.g.video.width - 0.5) * this.g.video.width * this.g.videoScale + this.p.width / 2
-    const y = (_y / this.g.video.height - 0.5) * this.g.video.height * this.g.videoScale + this.p.height / 2
+    // The 0.11 is a weird magic number, its different when running fullscreen. Not sure exacttly what it is.
+
+    const x = _x * this.g.video.width * this.g.videoScale
+    const y = (_y - 0.11) * this.g.video.height * this.g.videoScale
+
+    // const x = (_x / this.g.video.width - 0.5) * this.g.video.width * this.g.videoScale + this.p.width / 2
+    // const y = (_y / this.g.video.height - 0.5) * this.g.video.height * this.g.videoScale + this.p.height / 2
 
     return [x, y]
 
@@ -35,7 +40,7 @@ export class Mouth {
       right: -Infinity
     }
 
-    for (const [_x, _y] of points) {
+    for (const { x: _x, y: _y } of points) {
 
       const [x, y] = this.mapWebcamPointToCanvasPoint([_x, _y])
 

@@ -5,7 +5,7 @@ export class Word {
 
     this.p5 = p5;
     this.position = this.p5.createVector(this.p5.width, this.p5.random(this.p5.height));
-    this.speed = -1;
+    this.speed = -4;
 
   }
 

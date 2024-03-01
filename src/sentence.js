@@ -1,26 +1,48 @@
+import { Agent } from "./generative/Agent"
+
 export class Sentence {
 
-  constructor() {
+  constructor(openai) {
+
     this.words = []
+
+    this.agent = new Agent(openai)
+    this.agent.setCurrentMessage("Person 1:")
+
+    this.nextOptions = new Set()
+
+  }
+
+  updateOptions() {
+
+    this.nextOptions.clear()
+
+    this.agent.getOptions().then(options => {
+      options.forEach(option => { this.nextOptions.add(option) })
+      console.log("this.nextOptions", this.nextOptions)
+    })
+
+
   }
 
   addWord(word) {
+
     this.words.push(word)
+    this.agent.setCurrentMessage("Person 1: " + this.toString())
+
+    console.log(this.words)
+    this.updateOptions()
+
   }
 
   getNextWord() {
 
-    const choices = [
-      "potato",
-      "tomato",
-      "banana",
-      "apple",
-      "orange",
-      "carrot",
-      "cucumber",
-    ]
+    // Return a random option
+    const randomOption = Array.from(this.nextOptions)[Math.floor(Math.random() * this.nextOptions.size)]
 
-    return choices[Math.floor(Math.random() * choices.length)]
+    console.log(randomOption)
+
+    return randomOption?.token
 
   }
 
