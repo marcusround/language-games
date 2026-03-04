@@ -21,9 +21,9 @@ export class Word {
 
   }
 
-  draw() {
+  draw(offset) {
 
-    this.p5.text(this.word, this.position.x, this.position.y);
+    this.p5.text(this.word, this.position.x, (this.position.y + offset) % this.p5.height);
 
   }
 

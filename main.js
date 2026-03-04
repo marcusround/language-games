@@ -73,6 +73,8 @@ new p5(p => {
 
   function doDrawFace() {
 
+    let yOffset = 0;
+
     if (g.results) {
 
       if (g.results.faceLandmarks.length === 0) {
@@ -86,8 +88,7 @@ new p5(p => {
 
         let { x, y } = g.results.faceLandmarks[0][i]
 
-        // I don't know why this be like it is but it do
-        y -= 0.11
+        y += yOffset
 
         x *= g.video.width * g.videoScale
         y *= g.video.height * g.videoScale
@@ -105,7 +106,7 @@ new p5(p => {
       for (const i of innerMouthIndices) {
         p.vertex(
           g.results.faceLandmarks[0][i].x * g.video.width * g.videoScale,
-          (g.results.faceLandmarks[0][i].y - 0.11) * g.video.height * g.videoScale
+          (g.results.faceLandmarks[0][i].y + yOffset) * g.video.height * g.videoScale
         )
 
       }
@@ -120,7 +121,7 @@ new p5(p => {
       for (const i of outerMouthIndices) {
         p.vertex(
           g.results.faceLandmarks[0][i].x * g.video.width * g.videoScale,
-          (g.results.faceLandmarks[0][i].y - 0.11) * g.video.height * g.videoScale
+          (g.results.faceLandmarks[0][i].y + yOffset) * g.video.height * g.videoScale
         )
 
       }
@@ -200,13 +201,13 @@ new p5(p => {
       p.textAlign(p.CENTER, p.CENTER); 2
 
       word.update();
-      word.draw();
+      word.draw(p.mouseY);
 
       if (word.x < 0) {
         g.words.splice(i, 1)
       }
 
-      if (mouth.canEatWord(word)) {
+      if (mouth.canEatWord(word, p.mouseY)) {
         g.words.splice(i, 1)
         g.sentence.addWord(word.word)
       }

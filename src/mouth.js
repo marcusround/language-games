@@ -18,13 +18,11 @@ export class Mouth {
 
   mapWebcamPointToCanvasPoint([_x, _y]) {
 
-    // The 0.11 is a weird magic number, its different when running fullscreen. Not sure exacttly what it is.
+    let yOffset = 0;
+    // let yOffset = -0.11;
 
     const x = _x * this.g.video.width * this.g.videoScale
-    const y = (_y - 0.11) * this.g.video.height * this.g.videoScale
-
-    // const x = (_x / this.g.video.width - 0.5) * this.g.video.width * this.g.videoScale + this.p.width / 2
-    // const y = (_y / this.g.video.height - 0.5) * this.g.video.height * this.g.videoScale + this.p.height / 2
+    const y = (_y + yOffset) * this.g.video.height * this.g.videoScale
 
     return [x, y]
 
@@ -94,13 +92,15 @@ export class Mouth {
 
   }
 
-  canEatWord(word) {
+  canEatWord(word, offset) {
+
+    const offsetY = (word.position.y + offset) % this.p.height
 
     return (
       word.position.x > this.boundingBox.left &&
       word.position.x < this.boundingBox.right &&
-      word.position.y > this.boundingBox.top &&
-      word.position.y < this.boundingBox.bottom
+      offsetY > this.boundingBox.top &&
+      offsetY < this.boundingBox.bottom
     )
 
   }
