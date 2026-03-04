@@ -17,11 +17,15 @@ export class Sentence {
 
     this.nextOptions.clear()
 
-    this.agent.getOptions().then(options => {
-      options.forEach(option => { this.nextOptions.add(option) })
-      console.log("this.nextOptions", this.nextOptions)
-    })
-
+    this.agent.getNewOptions()
+      .then(options => {
+        options.forEach(option => {
+          if (option.token && option.token !== " ") {
+            this.nextOptions.add(option)
+          }
+        })
+        console.log("this.nextOptions", this.nextOptions)
+      })
 
   }
 

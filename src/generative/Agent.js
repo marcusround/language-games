@@ -2,6 +2,14 @@ const systemPrompt = `You help to write believable conversations. The user will 
 
 For example, the user's message may end abruptly: "The dog went" and you are to simply continue the sentence without interruption; so your response might begin with "for a walk."
 
+The syntax or layout of the written conversation would be as follows:
+
+Person 1: How are you?
+Person 2: I'm fine thanks, and you?
+Person 1: I'm good too.
+
+You should NEVER start a new line of dialogue; that is to say you never need to write "Person 2:" or "Person 1:". You should only ever write dialogue that continues the previous line.
+
 However, the scenario we are writing conversation for is two people on a first date. So you should write the dialogue with this in mind.`
 
 export class Agent {
@@ -22,7 +30,7 @@ export class Agent {
     this.settings = {
       model: "gpt-4-turbo-preview",
       logprobs: true,
-      top_logprobs: 5, // TODO This can change to 20 after March 3rd
+      top_logprobs: 20, // TODO This can change to 20 after March 3rd
       max_tokens: 1,
       temperature: 0.5
     }
@@ -49,7 +57,7 @@ export class Agent {
 
   }
 
-  async getOptions() {
+  async getNewOptions() {
 
     return (await this.getResponse()).choices[0].logprobs.content[0].top_logprobs
 
