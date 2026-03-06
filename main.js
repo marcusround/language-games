@@ -73,7 +73,7 @@ new p5(p => {
 
   function doDrawFace() {
 
-    let yOffset = 0;
+    let yOffset = -0.11;
 
     if (g.results) {
 

@@ -19,7 +19,7 @@ export class Mouth {
   mapWebcamPointToCanvasPoint([_x, _y]) {
 
     let yOffset = 0;
-    // let yOffset = -0.11;
+    yOffset = -0.11;
 
     const x = _x * this.g.video.width * this.g.videoScale
     const y = (_y + yOffset) * this.g.video.height * this.g.videoScale

@@ -1,4 +1,4 @@
-import { Agent } from "./generative/Agent"
+import { Agent } from "./generative/OpenAIAgent"
 
 export class Sentence {
 
@@ -24,7 +24,8 @@ export class Sentence {
             this.nextOptions.add(option)
           }
         })
-        console.log("this.nextOptions", this.nextOptions)
+        const tokens = Array.from(this.nextOptions).map(o => o.token)
+        console.log("Options:", tokens.join(" | "))
       })
 
   }
@@ -33,19 +34,14 @@ export class Sentence {
 
     this.words.push(word)
     this.agent.setCurrentMessage("Person 1: " + this.toString())
-
-    console.log(this.words)
+    console.log("Sentence:", this.toString())
     this.updateOptions()
 
   }
 
   getNextWord() {
 
-    // Return a random option
     const randomOption = Array.from(this.nextOptions)[Math.floor(Math.random() * this.nextOptions.size)]
-
-    console.log(randomOption)
-
     return randomOption?.token
 
   }
