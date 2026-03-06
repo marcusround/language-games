@@ -73,13 +73,18 @@ new p5(p => {
 
   function doDrawFace() {
 
-    let yOffset = -0.11;
+    let yOffset = 0;// -0.11;
 
     if (g.results) {
 
       if (g.results.faceLandmarks.length === 0) {
         return
       }
+
+      const videoWidth = g.video.width * g.videoScale
+      const videoHeight = g.video.height * g.videoScale
+      const videoOffsetX = (p.width - videoWidth) / 2
+      const videoOffsetY = (p.height - videoHeight) / 2
 
       p.push()
       p.noStroke()
@@ -88,10 +93,11 @@ new p5(p => {
 
         let { x, y } = g.results.faceLandmarks[0][i]
 
+        x = 1 - x
         y += yOffset
 
-        x *= g.video.width * g.videoScale
-        y *= g.video.height * g.videoScale
+        x = videoOffsetX + x * videoWidth
+        y = videoOffsetY + y * videoHeight
 
         // p.text(i, x, y)
 
@@ -105,8 +111,8 @@ new p5(p => {
 
       for (const i of innerMouthIndices) {
         p.vertex(
-          g.results.faceLandmarks[0][i].x * g.video.width * g.videoScale,
-          (g.results.faceLandmarks[0][i].y + yOffset) * g.video.height * g.videoScale
+          videoOffsetX + (1 - g.results.faceLandmarks[0][i].x) * videoWidth,
+          videoOffsetY + (g.results.faceLandmarks[0][i].y + yOffset) * videoHeight
         )
 
       }
@@ -120,8 +126,8 @@ new p5(p => {
 
       for (const i of outerMouthIndices) {
         p.vertex(
-          g.results.faceLandmarks[0][i].x * g.video.width * g.videoScale,
-          (g.results.faceLandmarks[0][i].y + yOffset) * g.video.height * g.videoScale
+          videoOffsetX + (1 - g.results.faceLandmarks[0][i].x) * videoWidth,
+          videoOffsetY + (g.results.faceLandmarks[0][i].y + yOffset) * videoHeight
         )
 
       }
@@ -139,6 +145,7 @@ new p5(p => {
     p.push()
 
     p.translate(p.width / 2, p.height / 2)
+    p.scale(-1, 1)
 
     p.image(
       g.video,
@@ -208,8 +215,9 @@ new p5(p => {
       }
 
       if (mouth.canEatWord(word, p.mouseY)) {
-        g.words.splice(i, 1)
         g.sentence.addWord(word.word)
+        g.words.length = 0
+        break
       }
 
       p.pop();
@@ -217,9 +225,14 @@ new p5(p => {
     }
 
     p.push()
-    p.fill('red')
+    p.fill(255)
+    p.noStroke()
+    p.rectMode(p.CORNER)
+    p.rect(0, 0, p.width, 60)
+    p.fill(0)
     p.textSize(24)
-    p.text(g.sentence.toString(), 25, 25)
+    p.textAlign(p.LEFT, p.CENTER)
+    p.text(g.sentence.toString(), 25, 30)
     p.pop()
 
   }
